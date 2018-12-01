@@ -245,6 +245,8 @@ sub man_dist_old {
 
 =head1 ASSIGNMENT
 
+https://adventofcode.com/2017/day/3
+
 --- Day 3: Spiral Memory ---
 
 You come across an experimental new kind of memory stored on an infinite
@@ -305,6 +307,6 @@ squares would receive the following values:
 
 What is the first value written that is larger than your puzzle input?
 
-Your puzzle input is still 347991.
+Your puzzle input was 347991.
 
 =cut
