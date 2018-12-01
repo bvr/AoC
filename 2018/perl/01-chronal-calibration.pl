@@ -2,8 +2,8 @@
 use 5.16.0; use strict; use warnings;
 use Test::More;
 use Path::Class qw(file);
-use List::Util qw(reduce);
-use Iterator::Simple qw(ihead list iterator igrep imap);
+use List::Util qw(sum);
+use Iterator::Simple qw(iterator igrep imap);
 
 # load data
 my $input_file = "../input/01.txt";
@@ -19,7 +19,7 @@ done_testing;
 
 sub find_frequency {
     my ($start_at, $array_ref) = @_;
-    return reduce { $a + $b } $start_at, @$array_ref;
+    return sum($start_at, @$array_ref);
 }
 
 sub cyclic_buffer {
