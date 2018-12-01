@@ -1,40 +1,52 @@
 
+use 5.16.0; use strict; use warnings;
 use Test::More;
-use Data::Dump;
 use Path::Class qw(file);
 use List::Util qw(reduce);
-use Function::Parameters;
-use Data::Dump;
+use Iterator::Simple qw(ihead list iterator igrep imap);
 
-my $input_file = "input\\01.txt";
+# load data
+my $input_file = "../input/01.txt";
 my @input = file($input_file)->slurp(chomp => 1);
 
-{
-    my $start_at = 0;
-    my $freq = $start_at;
-    for my $i (@input) {
-        $freq = eval "$freq $i";
-    }
-    is $freq, 408, 'first part';
-}
-
-{
-    my %seen = ();
-    my $freq = $start_at;
-    # my @input = qw(+7 +7 -2 -7 -4);
-    # my @input = qw(-6 +3 +8 +5 -6);
-    for my $i ((@input) x 200) {
-        $freq = eval "$freq $i";
-        # warn "$i: $freq\n";
-        if(defined $seen{$freq}) {
-            warn $freq;
-            last;
-        }
-        $seen{$freq}++;
-    }
-}
+my $start_at = 0;
+is find_frequency  ($start_at, \@input),              408,   'part 1';
+is first_seen_again($start_at, [qw(+7 +7 -2 -7 -4)]), 14,    'part 2 - example 1';
+is first_seen_again($start_at, [qw(-6 +3 +8 +5 -6)]), 5,     'part 2 - example 2';
+is first_seen_again($start_at, \@input),              55250, 'part 2';
 
 done_testing;
+
+sub find_frequency {
+    my ($start_at, $array_ref) = @_;
+    return reduce { $a + $b } $start_at, @$array_ref;
+}
+
+sub cyclic_buffer {
+    my ($array_ref) = @_;
+    my $pos = 0;
+    return iterator {
+        my $idx = $pos;
+        $pos = ($pos+1) % @$array_ref;
+        return $array_ref->[$idx];
+    };
+}
+
+sub seen_in {
+    my ($store, $item) = @_;
+    my $found = $store->{$item};
+    $store->{$item}++;
+    return $found;
+}
+
+sub first_seen_again {
+    my ($start_at, $array_ref) = @_;
+
+    my $curr_freq = $start_at;
+    my %store = ();
+    return (igrep { seen_in(\%store, $_) } imap { $curr_freq += $_; } cyclic_buffer($array_ref))->next;
+}
+
 
 =head1 ASSIGNMENT
 
