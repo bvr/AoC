@@ -1,10 +1,11 @@
 
 use 5.16.3;
+use lib 'lib';
 use Test::More;
 use Data::Dump;
 use Path::Class qw(file);
-use Algorithm::Combinatorics qw(combinations);
 use Iterator::Simple qw(iterator igrep list);
+use Utils qw(combine);
 
 package Claim {
     use Moo;
@@ -103,16 +104,6 @@ sub claims_non_overlapped {
         }
     }
     return grep { ! exists $overlapped{$_->id} } @$claims;
-}
-
-sub combine {
-    my ($array, $num) = @_;
-    my $it = combinations($array, $num);
-
-    # need to wrap Algorithm::Combinatorics iterator, as it does not work with igrep
-    return iterator {
-        return $it->next;
-    };
 }
 
 =head1 ASSIGNMENT

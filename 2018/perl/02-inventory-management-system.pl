@@ -1,10 +1,11 @@
 
 use 5.16.3;
+use lib 'lib';
 use Test::More;
 use Path::Class qw(file);
 use Iterator::Simple qw(iterator igrep list);
-use Algorithm::Combinatorics qw(combinations);
 use List::AllUtils qw(pairwise);
+use Utils qw(combine);
 
 # load data
 my $input_file = "../input/02.txt";
@@ -72,16 +73,6 @@ sub common_part_of_box_id {
     my @p1 = split //, $found->[0];
     my @p2 = split //, $found->[1];
     return join '', grep { defined } pairwise { $a eq $b ? $a : undef } @p1, @p2;
-}
-
-sub combine {
-    my ($array, $num) = @_;
-    my $it = combinations($array, $num);
-
-    # need to wrap Algorithm::Combinatorics iterator, as it does not work with igrep
-    return iterator {
-        return $it->next;
-    };
 }
 
 sub only_one_difference {
