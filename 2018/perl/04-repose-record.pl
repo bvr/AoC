@@ -1,9 +1,8 @@
 
 use 5.16.3;
 use Test::More;
-use Path::Class qw(file);
-use Iterator::Simple qw(iter imap list);
-use List::Util qw(sum);
+use Path::Class      qw(file);
+use List::AllUtils   qw(sum max max_by);
 use Data::Dump;
 
 my @test_items = split /\n/, <<END;
@@ -26,44 +25,35 @@ my @test_items = split /\n/, <<END;
 [1518-11-05 00:55] wakes up
 END
 
-{
-    my $result = find_good_time(parse_input(\@test_items));
-    is $result->{sleepy_id} * $result->{worst_minute}, 240, 'part 1 - test';
-}
+is find_good_time(parse_input(\@test_items))->[0], 240, 'part 1 - test';
 
 my $input_file = "../input/04.txt";
 my @data_items = file($input_file)->slurp(chomp => 1);
 
-{
-    my $result = find_good_time(parse_input(\@data_items));
-    is $result->{sleepy_id} * $result->{worst_minute},       67558, 'part 1';
-    is $result->{most_times_id} * $result->{most_times_min}, 78990, 'part 2';
-}
-
+my $result = find_good_time(parse_input(\@data_items));
+is $result->[0], 67558, 'part 1';
+is $result->[1], 78990, 'part 2';
 
 done_testing;
 
 sub parse_input {
     my ($lines) = @_;
 
-    # build structure like:
-    # $asleep->{$day}{$guard_id}[$minute] = 1
-
+    # build structure like:  $asleep->{$day}{$guard_id}[$minute] = 1
     my $asleep = {};
     my $curr_guard_id;
+    my $falls_asleep;
     for my $line (sort @$lines) {
-        if(my ($day, $hh, $mm) = $line =~ /\[\d+-(\d+-\d+) (\d+):(\d+)\]/) {
-            my $minute = $hh == 23 ? $mm : 60+$mm;
-
-            if(my ($guard_id) = $line =~ /Guard #(\d+) begins shift/) {
-                $curr_guard_id = $guard_id;
+        if(my ($day, $min) = $line =~ /\[\d+-(\d+-\d+) \d+:(\d+)\]/) {
+            if($line =~ /Guard #(\d+) begins shift/) {
+                $curr_guard_id = $1;
             }
             if($line =~ /falls asleep/) {
-                $asleep->{$day}{$curr_guard_id}[$minute] = 1;
+                $falls_asleep = $min;
             }
             if($line =~ /wakes up/) {
-                my $last_minute = scalar @{ $asleep->{$day}{$curr_guard_id} };
-                @{$asleep->{$day}{$curr_guard_id}}[$last_minute .. $minute - 1] = (1) x ($minute - $last_minute);
+                $asleep->{$day}{$curr_guard_id}[$_] = 1  for $falls_asleep .. $min-1;
+                undef $falls_asleep;
             }
         }
     }
@@ -78,49 +68,21 @@ sub find_good_time {
     my %guards = ();
     for my $day (keys %$asleep) {
         for my $guard_id (keys %{ $asleep->{$day} }) {
-            for my $i (0 .. $#{ $asleep->{$day}{$guard_id} }) {
-                $guards{$guard_id}[$i]++ if $asleep->{$day}{$guard_id}[$i] == 1;
+            for my $min (0 .. 59) {
+                $guards{$guard_id}[$min]++ if $asleep->{$day}{$guard_id}[$min] == 1;
             }
         }
     }
 
-    # $total{$guard_id} = minutes asleep
-    my %total;
-    for my $guard_id (keys %guards) {
-        $total{$guard_id} = sum(@{$guards{$guard_id}}[60 .. 119]);
-    }
+    # strategy 1 - elf that sleeps most
+    my $most_sleepy_id = max_by { sum @{$guards{$_}}              } keys %guards;
+    my $worst_minute   = max_by { $guards{$most_sleepy_id}[$_]//0 } 0 .. 59;
 
-    # strategy 1
-    my @sleep_most = sort { $total{$b} <=> $total{$a} } keys %total;
-    my $most_sleepy_id = $sleep_most[0];
+    # strategy 2 - elf that slept most times in specific minute
+    my $most_times_id  = max_by { max @{$guards{$_}}              } keys %guards;
+    my $most_times_min = max_by { $guards{$most_times_id}[$_]//0  } 0 .. 59;
 
-    my $worst_minute = 0;
-    for my $i (0 .. $#{ $guards{$most_sleepy_id} }) {
-        if($guards{$most_sleepy_id}[$i] > $guards{$most_sleepy_id}[$worst_minute]) {
-            $worst_minute = $i;
-        }
-    }
-
-    # strategy 2
-    my $most_times;
-    my $most_times_min;
-    my $most_times_id;
-    for my $i (60 .. 119) {
-        for my $guard_id (keys %guards) {
-            if($guards{$guard_id}[$i] > $most_times) {
-                $most_times = $guards{$guard_id}[$i];
-                $most_times_min = $i;
-                $most_times_id = $guard_id;
-            }
-        }
-    }
-
-    return {
-        sleepy_id      => $most_sleepy_id,
-        worst_minute   => $worst_minute - 60,
-        most_times_min => $most_times_min - 60,
-        most_times_id  => $most_times_id,
-    };
+    return [ $most_sleepy_id * $worst_minute, $most_times_id * $most_times_min ];
 }
 
 =head1 ASSIGNMENT
