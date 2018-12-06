@@ -3,7 +3,7 @@ use 5.16.3;
 use lib 'lib';
 use Test::More;
 use Path::Class    qw(file);
-use List::AllUtils qw(max max_by);
+use List::AllUtils qw(sum max max_by);
 use Iterator::Simple qw(list);
 use Algorithm::Combinatorics qw(combinations);
 use Data::Dump;
@@ -38,10 +38,57 @@ my @test = split /\n/, <<END;
 8, 9
 END
 
-proc_points(\@test);
-
+is proc_points(\@test), 17, 'part 1 - test';
+# is proc_points(\@input), 4186, 'part 1';
+is find_region(\@test, 32), 16, 'part 2 - test';
+is find_region(\@input, 10_000), 16, 'part 2';
 
 done_testing;
+
+sub find_region {
+    my ($lines, $total_dist) = @_;
+
+    my @points = map { Point->new_from_array(split /,\s*/, $_) } @$lines;
+
+    my $center = Point->new(
+        x => int((sum map { $_->x } @points)/@points),
+        y => int((sum map { $_->y } @points)/@points),
+    );
+
+    # dd $center;
+    # warn sum map { man_dist($center, $_) } @points;
+
+    my $dist = 1;
+    my $region_size = 1;
+    my $added = 1;
+    while($added) {
+        my @test = points_in_dist($center, $dist);
+        $added = grep {
+            my $pt = $_;
+            sum(map { man_dist($pt, $_) } @points) < $total_dist
+        } @test;
+        $region_size += $added;
+        $dist++;
+    }
+    return $region_size;
+}
+
+sub points_in_dist {
+    my ($pt, $d) = @_;
+
+    my @cir = ();
+    for my $i (0 .. $d) {
+
+        push @cir, Point->new_from_array($pt->x + $i, $pt->y - $d + $i);
+        push @cir, Point->new_from_array($pt->x - $i, $pt->y + $d - $i);
+
+        # skip double updating the corners
+        next if $i == 0 || $i == $d;
+        push @cir, Point->new_from_array($pt->x + $i, $pt->y + $d - $i);
+        push @cir, Point->new_from_array($pt->x - $i, $pt->y - $d + $i);
+    }
+    return @cir;
+}
 
 sub proc_points {
     my ($lines) = @_;
@@ -51,9 +98,9 @@ sub proc_points {
 
     warn $max_dist,"\n";
 
+    my %storage = ();
     my $coords = sub {
         my ($x, $y) = @_;
-        my %storage = ();
         return $storage{ "$x,$y" } ||= {};
     };
 
@@ -72,6 +119,7 @@ sub proc_points {
             }
         }
     }
+    # dd \%storage;
 
     my $d = $max_dist + 1;
     my @finite = ();
@@ -90,7 +138,7 @@ sub proc_points {
         push @finite, $pt if $changed == 0;
     }
 
-    dd \@points;
+    # dd \@points;
 
     dd \@finite;
 
