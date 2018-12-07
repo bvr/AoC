@@ -4,7 +4,6 @@ use lib 'lib';
 use Test::More;
 use Path::Class    qw(file);
 use List::AllUtils qw(sum max max_by);
-use Iterator::Simple qw(list);
 use Algorithm::Combinatorics qw(combinations);
 use Data::Dump;
 
@@ -27,8 +26,6 @@ package Point {
 my $input_file = "../input/06.txt";
 my @input = file($input_file)->slurp(chomp => 1);
 
-# dd @input;
-
 my @test = split /\n/, <<END;
 1, 1
 1, 6
@@ -39,11 +36,12 @@ my @test = split /\n/, <<END;
 END
 
 is proc_points(\@test), 17, 'part 1 - test';
-# is proc_points(\@input), 4186, 'part 1';
+is proc_points(\@input), 4186, 'part 1';
 is find_region(\@test, 32), 16, 'part 2 - test';
-is find_region(\@input, 10_000), 16, 'part 2';
+is find_region(\@input, 10_000), 45509, 'part 2';
 
 done_testing;
+
 
 sub find_region {
     my ($lines, $total_dist) = @_;
@@ -55,18 +53,14 @@ sub find_region {
         y => int((sum map { $_->y } @points)/@points),
     );
 
-    # dd $center;
-    # warn sum map { man_dist($center, $_) } @points;
-
-    my $dist = 1;
-    my $region_size = 1;
-    my $added = 1;
-    while($added) {
-        my @test = points_in_dist($center, $dist);
-        $added = grep {
+    my $dist = 0;
+    my $region_size = 0;
+    while(1) {
+        my $added = grep {
             my $pt = $_;
             sum(map { man_dist($pt, $_) } @points) < $total_dist
-        } @test;
+        } points_in_dist($center, $dist);
+        last unless $added;
         $region_size += $added;
         $dist++;
     }
@@ -75,6 +69,9 @@ sub find_region {
 
 sub points_in_dist {
     my ($pt, $d) = @_;
+
+    # handle trivial case
+    return ($pt) if $d == 0;
 
     my @cir = ();
     for my $i (0 .. $d) {
@@ -96,8 +93,6 @@ sub proc_points {
     my @points = map { Point->new_from_array(split /,\s*/, $_) } @$lines;
     my $max_dist = max map { man_dist(@$_) } combinations(\@points, 2);
 
-    warn $max_dist,"\n";
-
     my %storage = ();
     my $coords = sub {
         my ($x, $y) = @_;
@@ -106,43 +101,23 @@ sub proc_points {
 
     for my $d (0..$max_dist) {
         for my $pt (@points) {
-            my $changed = 0;
-            for my $i (0 .. $d) {
-
-                $changed += collide_with($pt, $d, $coords->($pt->x + $i, $pt->y - $d + $i));
-                $changed += collide_with($pt, $d, $coords->($pt->x - $i, $pt->y + $d - $i));
-
-                # skip double updating the corners
-                next if $i == 0 || $i == $d;
-                $changed += collide_with($pt, $d, $coords->($pt->x + $i, $pt->y + $d - $i));
-                $changed += collide_with($pt, $d, $coords->($pt->x - $i, $pt->y - $d + $i));
+            for my $surr (points_in_dist($pt, $d)) {
+                collide_with($pt, $d, $coords->($surr->x, $surr->y));
             }
         }
     }
-    # dd \%storage;
 
     my $d = $max_dist + 1;
     my @finite = ();
     for my $pt (@points) {
         my $changed = 0;
-        for my $i (0 .. $d) {
-
-            $changed += collide_with($pt, $d, $coords->($pt->x + $i, $pt->y - $d + $i));
-            $changed += collide_with($pt, $d, $coords->($pt->x - $i, $pt->y + $d - $i));
-
-            # skip double updating the corners
-            next if $i == 0 || $i == $d;
-            $changed += collide_with($pt, $d, $coords->($pt->x + $i, $pt->y + $d - $i));
-            $changed += collide_with($pt, $d, $coords->($pt->x - $i, $pt->y - $d + $i));
+        for my $surr (points_in_dist($pt, $d)) {
+            $changed += collide_with($pt, $d, $coords->($surr->x, $surr->y));
         }
         push @finite, $pt if $changed == 0;
     }
 
-    # dd \@points;
-
-    dd \@finite;
-
-    return (max_by { $_->area } @finite)->area;
+    return (max_by { $_->area } @finite)->area - 1;
 }
 
 sub collide_with {
