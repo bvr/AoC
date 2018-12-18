@@ -12,7 +12,7 @@ method new_from_string($class: $str) {
     $class->new(area => [ map { [ split // ] } split /\n/, $str ]);
 }
 
-method _build_size {
+method _build_size() {
     return scalar @{ $self->area };
 }
 
@@ -36,7 +36,7 @@ method cell($r, $c) {
     return $self->area->[$r][$c];
 }
 
-method new_generation {
+method new_generation() {
     my $new_array = [];
     for my $r (0 .. $self->size - 1) {
         for my $c (0 .. $self->size - 1) {
@@ -58,7 +58,7 @@ method new_generation {
     return CollectionArea->new(area => $new_array);
 }
 
-method resource_value {
+method resource_value() {
     my ($tree, $lumb) = (0, 0);
     for my $r (0 .. $self->size - 1) {
         for my $c (0 .. $self->size - 1) {
@@ -70,7 +70,7 @@ method resource_value {
     return $tree * $lumb;
 }
 
-method to_string {
+method to_string() {
     return join("\n", map { join '', @$_ } @{ $self->area }) . "\n";
 }
 
