@@ -2,45 +2,30 @@
 use 5.16.3;
 use Test::More;
 use Path::Class qw(file);
-use List::AllUtils qw(natatime);
+use List::AllUtils qw(natatime pairmap);
 use Data::Dump qw(dd pp);
+use Sub::Quote qw(quote_sub);
 use experimental 'smartmatch';
-no strict "vars";
 
-sub inst(&) {
-    my ($f) = @_;
-    my $pkg = caller;
-
-    return sub {
-        my ($a, $b, $c, $regs) = @_;
-        no strict 'refs';
-        local *{"${pkg}::a"} = \$a;
-        local *{"${pkg}::b"} = \$b;
-        local *{"${pkg}::r"} = $regs;
-        my $result_regs = eval pp $regs;
-        $result_regs->[$c] = $f->();
-        return $result_regs;
-    };
-}
-
-my %inst = (
-    addr => inst { $r[$a] + $r[$b] },
-    addi => inst { $r[$a] + $b },
-    mulr => inst { $r[$a] * $r[$b] },
-    muli => inst { $r[$a] * $b },
-    banr => inst { $r[$a] & $r[$b] },
-    bani => inst { $r[$a] & $b },
-    borr => inst { $r[$a] | $r[$b] },
-    bori => inst { $r[$a] | $b },
-    setr => inst { $r[$a] },
-    seti => inst { $a },
-    gtir => inst { $a > $r[$b]      ? 1 : 0 },
-    gtri => inst { $r[$a] > $b      ? 1 : 0 },
-    gtrr => inst { $r[$a] > $r[$b]  ? 1 : 0 },
-    eqir => inst { $a == $r[$b]     ? 1 : 0 },
-    eqri => inst { $r[$a] == $b     ? 1 : 0 },
-    eqrr => inst { $r[$a] == $r[$b] ? 1 : 0 },
+my %inst = build_instructions(
+    addr => "ra + rb",
+    addi => "ra + b",
+    mulr => "ra * rb",
+    muli => "ra * b",
+    banr => "ra & rb",
+    bani => "ra & b",
+    borr => "ra | rb",
+    bori => "ra | b",
+    setr => "ra",
+    seti => " a",
+    gtir => " a >  rb ? 1 : 0",
+    gtri => "ra >  b  ? 1 : 0",
+    gtrr => "ra >  rb ? 1 : 0",
+    eqir => " a == rb ? 1 : 0",
+    eqri => "ra == b  ? 1 : 0",
+    eqrr => "ra == rb ? 1 : 0",
 );
+
 
 my @opcodes = qw(
     eqir
@@ -68,7 +53,7 @@ my $input_file = "../input/16.txt";
 my @input = file($input_file)->slurp(chomp => 1);
 my $three = natatime 4, @input;
 my $count = 0;
-%histogram = ();
+my %histogram = ();
 while(my @items = $three->()) {
     last if $items[0] eq '';
     my $before = [ $items[0] =~ /\d+/g ];
@@ -112,8 +97,14 @@ sub sample_match_opcodes {
     return keys %ops;
 }
 
-
-# dd $inst{addr}->(0,1 => 2, [10, 12, 14, 16]);
+sub build_instructions {
+    return pairmap {
+        my $code = $b;
+        $code =~ s/\b([ab])\b/\$$1/g;
+        $code =~ s/\br([ab])\b/\$r->[\$$1]/g;
+        $a => quote_sub q{ my ($a, $b, $c, $r) = @_; my $res = eval pp $r; $res->[$c] = } . $code . q{ ; return $res };
+    } @_;
+}
 
 __DATA__
 15 1 2 1
