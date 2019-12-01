@@ -10,8 +10,18 @@ use Data::Dump     qw(dd pp);
 package Bot {
     use Moo;
     use Function::Parameters;
-    use List::AllUtils qw(sum minmax min max reduce);
-    use Data::Dump;
+    use List::AllUtils qw(sum);
+
+    # build list of directions for moves
+    my @dirs = ();
+    for my $dx (-1, 0, 1) {
+        for my $dy (-1, 0, 1) {
+            for my $dz (-1, 0, 1) {
+                next if $dx == 0 && $dy == 0 && $dz == 0;
+                push @dirs, [$dx, $dy, $dz];
+            }
+        }
+    }
 
     has pos => (is => 'ro');
     has rad => (is => 'ro');
@@ -28,19 +38,14 @@ package Bot {
         return $self->man_dist_to($b) <= $self->rad + $b->rad;
     }
 
-    method moves($by) {
-        my @dirs = ();
-        for my $dx (-1, 0, 1) {
-            for my $dy (-1, 0, 1) {
-                for my $dz (-1, 0, 1) {
-                    next if $dx == 0 && $dy == 0 && $dz == 0;
-                    push @dirs, [$dx * $by, $dy * $by, $dz * $by];
-                }
-            }
-        }
+    method moves($step) {
         return map {
             my ($dx, $dy, $dz) = @$_;
-            Bot->new(pos => [ $self->pos->[0] + $dx, $self->pos->[1] + $dy, $self->pos->[2] + $dz ])
+            Bot->new(pos => [
+                $self->pos->[0] + $dx*$step,
+                $self->pos->[1] + $dy*$step,
+                $self->pos->[2] + $dz*$step
+            ], rad => $self->rad)
         } @dirs;
     }
 
@@ -68,6 +73,7 @@ my $max_radius_bot = max_by { $_->rad } @bots;
 my @in_range = grep { $max_radius_bot->in_range($_) } @bots;
 is scalar @in_range, 580, 'part 1';
 
+# find groups that see the first element (start with largest radius)
 my @groups;
 for my $from (sort { $b->rad <=> $a->rad } @bots) {
     push @groups, [$from];
@@ -77,30 +83,29 @@ for my $from (sort { $b->rad <=> $a->rad } @bots) {
     }
 }
 
+# take group by group sorted by number of elements, find intersections
+# stop when we found intersection with as many items as current iteration
 my @isect = @bots;
 my $i = 1;
 for my $grp (sort { @$b <=> @$a } @groups) {
     my @is = intersect(@isect, @$grp);
-    # warn $i,": ", scalar @is, "\n";
     last if $i == scalar @is;
     @isect = @is;
     $i++;
 }
 
-# center
+# center of gravity, search iteratively from it
 my $x = int(sum(map { $_->pos->[0] } @isect) / @isect);
 my $y = int(sum(map { $_->pos->[1] } @isect) / @isect);
 my $z = int(sum(map { $_->pos->[2] } @isect) / @isect);
-# my $center = Bot->new(pos => [$x, $y, $z]);
+my $center = Bot->new(pos => [$x, $y, $z]);
 
-
-# my $step = 1024**2;
+my $step = 1024**2;
 # dd find_best_position($center, $step);
 
+# following coordinates were found by previous search
 my $fine_tune = Bot->new(pos => [13839441, 57977301, 25999489]);
-is sum(@{ find_best_position($fine_tune, 1)->pos }), 97816347, 'part 2';;
-
-
+is sum(@{ find_best_position($fine_tune, 1)->pos }), 97816347, 'part 2';
 
 
 sub find_best_position {
@@ -109,20 +114,12 @@ sub find_best_position {
     return if $step == 0;
 
     my @distances = map { $_->rad - $_->man_dist_to($center) } @isect;
-
-    dd $center, $step;
-    # dd \@distances;
-
     return $center if all { $_ >= 0 } @distances;
-
-    # dd $center, $step;
 
     my $good = 0;
     for my $new ($center->moves($step)) {
         my @new_dist = map { $_->rad - $_->man_dist_to($new) } @isect;
-        # dd [pairmap { [$a, $b, $b == 0 ? 1 : $a < 0 ? $a < $b : $b ] } zip @distances, @new_dist ];
         my $good_direction = all { $_ } pairmap { $b == 0 ? 1 : $a < 0 ? $a < $b : $b } zip @distances, @new_dist;
-        # warn "good_direction = $good_direction\n";
         if($good_direction) {
             $good++;
             my $found = find_best_position($new, $step);
