@@ -12,15 +12,14 @@ package Cargo {
 
     method new_from_plan($class: @lines) {
         my @stacks;
-        for my $box_line (grep { /\[\w\]/ } @lines) {
-            my $i = 0;
-            while(1) {
-                my $pos = 1 + 4*$i;
-                last if $pos > length($box_line);
-                my $cargo = substr($box_line, $pos, 1);
+        for my $box_line (@lines) {
+            last unless $box_line =~ /\[\w\]/;
+
+            # select non-space characters from cargo map like [Z] [M] [P] 
+            for my $set (map { $_->[1] ne ' ' ? ($_) : () } map { [ $_, substr $box_line, 1+4*$_, 1 ] } 0..length($box_line)/4) {
+                my ($i, $cargo) = @$set;
                 $stacks[$i] ||= [];
-                push @{ $stacks[$i] }, $cargo if $cargo ne ' ';
-                $i++;
+                push @{ $stacks[$i] }, $cargo;
             }
         }
 
@@ -42,8 +41,7 @@ package Cargo {
     method moves_cm9001(@lines) {
         for my $line (@lines) {
             if(my ($count, $from, $to) = $line =~ /move (\d+) from (\d+) to (\d+)/) {
-                my @load = splice @{ $self->stacks->[$from-1] }, 0, $count;
-                unshift @{ $self->stacks->[$to-1] }, @load;
+                unshift @{ $self->stacks->[$to-1] }, splice(@{ $self->stacks->[$from-1] }, 0, $count);
             }
         }
 
