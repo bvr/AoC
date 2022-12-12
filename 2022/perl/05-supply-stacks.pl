@@ -67,13 +67,13 @@ my @test = (
     "move 1 from 2 to 1",
     "move 3 from 1 to 3",
     "move 2 from 2 to 1",
-    "move 1 from 1 to 2",    
+    "move 1 from 1 to 2",
 );
 
 is(Cargo->new_from_plan(@test)->moves_cm9000(@test)->get_tops(), "CMZ", "test part 1");
 is(Cargo->new_from_plan(@plan)->moves_cm9000(@plan)->get_tops(), "VGBBJCRMN", "part 1");
 
 is(Cargo->new_from_plan(@test)->moves_cm9001(@test)->get_tops(), "MCD", "test part 2");
-is(Cargo->new_from_plan(@plan)->moves_cm9001(@plan)->get_tops(), "MCD", "part 2");
+is(Cargo->new_from_plan(@plan)->moves_cm9001(@plan)->get_tops(), "LBBVJBRMH", "part 2");
 
 done_testing;
