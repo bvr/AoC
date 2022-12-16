@@ -15,8 +15,8 @@ package Cargo {
         for my $box_line (@lines) {
             last unless $box_line =~ /\[\w\]/;
 
-            # select non-space characters from cargo map like [Z] [M] [P] 
-            for my $set (map { $_->[1] ne ' ' ? ($_) : () } map { [ $_, substr $box_line, 1+4*$_, 1 ] } 0..length($box_line)/4) {
+            # select non-space characters from cargo map like [Z] [M] [P] into pairs [0, 'Z'], [1, 'M'], [2, 'P'] 
+            for my $set (grep { $_->[1] ne ' ' } map { [ $_, substr $box_line, 1+4*$_, 1 ] } 0..length($box_line)/4) {
                 my ($i, $cargo) = @$set;
                 $stacks[$i] ||= [];
                 push @{ $stacks[$i] }, $cargo;
