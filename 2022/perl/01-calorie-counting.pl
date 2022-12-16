@@ -16,7 +16,7 @@ while(defined(my $line = <$in>)) {
     push @{ $elf[$i] }, $line;
 }
 
-my $most_calories = max(map { sum(@$_) } @elf);
+my $most_calories = max map { sum(@$_) } @elf;
 is $most_calories, 66306, 'part 1';
 
 my @totals = sort { $b <=> $a } map { sum @$_ } @elf;
@@ -24,9 +24,3 @@ my $top_three = sum @totals[0..2];
 is $top_three, 195292, 'part 2';
 
 done_testing;
-
-=head1 NAME
-
-https://adventofcode.com/2022/day/1
-
-=cut

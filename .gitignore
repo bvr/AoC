@@ -2,3 +2,5 @@
 2022/.vscode/*
 
 .fake
+2015/csharp/.vs/*
+2015/csharp/aoc2015/bin/*
