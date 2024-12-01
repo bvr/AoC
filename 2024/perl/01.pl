@@ -1,4 +1,6 @@
 
+# solution to https://adventofcode.com/2024/day/1
+
 use Test2::V0;
 use Path::Class qw(file);
 use Function::Parameters; 
@@ -13,7 +15,7 @@ my $test_data = parse_input(split /\n/, <<END);
 3   9
 3   3
 END
-my $input_file = "../input/01.txt";
+my $input_file = '../input/01.txt';
 my $data = parse_input(file($input_file)->slurp(chomp => 1));
 
 # part 1
@@ -21,8 +23,8 @@ is list_distance($test_data), 11, 'part 1 - test';
 is list_distance($data), 1970720, 'part 1 - real data';
 
 # part 2
-is similarity_score($test_data), 31,  "part 2 - test";
-is similarity_score($data), 17191599, "part 2 - real data";
+is similarity_score($test_data), 31,  'part 2 - test';
+is similarity_score($data), 17191599, 'part 2 - real data';
 
 done_testing;
 
