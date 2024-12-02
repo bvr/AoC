@@ -41,6 +41,7 @@ fun parse_input(@input) {
 fun list_distance($input) {
     my @sorted_a = sort @{ $input->[0] };
     my @sorted_b = sort @{ $input->[1] };
+    no warnings 'once';
     return sum( pairwise { abs($a - $b) } @sorted_a, @sorted_b );
 }
 

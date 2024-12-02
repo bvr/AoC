@@ -20,7 +20,6 @@ my @tests = (
 is num_positions_tail_visited(@tests), 13, 'part1 - test';
 
 
-
 done_testing;
 
 sub num_positions_tail_visited {
