@@ -1,8 +1,9 @@
 
+# solution to https://adventofcode.com/2024/day/3
+
 use Test2::V0;
 use Path::Class qw(file);
-use List::AllUtils qw(sum natatime first);
-use Data::Dump qw(dd);
+use List::AllUtils qw(sum);
 
 my $input_file = "../input/03.txt";
 my $memory = file($input_file)->slurp(chomp => 1);
