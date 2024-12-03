@@ -3,7 +3,7 @@
 
 use Test2::V0;
 use Path::Class qw(file);
-use List::AllUtils qw(sum);
+use List::AllUtils qw(true);
 use Function::Parameters;
 use Data::Dump qw(dd pp);
 
@@ -23,11 +23,11 @@ my @data = map { +[ split /\s+/ ] } file($input_file)->slurp(chomp => 1);
 #     warn pp($row), " => ", is_safe_w_tolerance(@$row) ? "safe" : "unsafe", "\n";
 # }
 
-is sum(map { is_safe(@$_) ? 1 : 0 } @test_data),   2, 'part 1 - test data';
-is sum(map { is_safe(@$_) ? 1 : 0 } @data),      287, 'part 1 - real data';
+is( (true { is_safe(@$_) } @test_data),   2, 'part 1 - test data');
+is( (true { is_safe(@$_) } @data),      287, 'part 1 - real data');
 
-is sum(map { is_safe_w_tolerance(@$_) ? 1 : 0 } @test_data),   4, 'part 2 - test data';
-is sum(map { is_safe_w_tolerance(@$_) ? 1 : 0 } @data),      354, 'part 2 - real data';
+is( (true { is_safe_w_tolerance(@$_) } @test_data),   4, 'part 2 - test data');
+is( (true { is_safe_w_tolerance(@$_) } @data),      354, 'part 2 - real data');
 
 done_testing;
 
