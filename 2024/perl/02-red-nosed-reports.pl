@@ -31,35 +31,16 @@ is( (true { is_safe_w_tolerance(@$_) } @data),      354, 'part 2 - real data');
 
 done_testing;
 
+fun is_descending(@report) {
+    for my $i (0 .. @report - 2) {
+        my $diff = $report[$i] - $report[$i + 1];
+        return 0 unless $diff >= 1 && $diff <= 3;
+    }
+    return 1;
+}
+
 fun is_safe(@report) {
-    my $first = shift @report;
-    my $second = shift @report;
-
-    return if $first == $second;
-
-    my $diff = abs($first - $second);
-    return if $diff > 3;
-
-    if($first > $second) { return check_down($second, @report); }
-    else                 { return check_up(  $second, @report); }
-}
-
-fun check_down($lead, @rest) {
-    return 1 if @rest == 0;
-
-    my $second = shift @rest;
-    return if $lead <= $second;
-    return if $lead - $second > 3;
-    return check_down($second, @rest);
-}
-
-fun check_up($lead, @rest) {
-    return 1 if @rest == 0;
-    
-    my $second = shift @rest;
-    return if $lead >= $second;
-    return if $second - $lead > 3;
-    return check_up($second, @rest);
+    return is_descending(@report) || is_descending(reverse @report);
 }
 
 fun is_safe_w_tolerance(@report) {
