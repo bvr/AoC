@@ -32,7 +32,7 @@ is( (true { is_safe_w_tolerance(@$_) } @data),      354, 'part 2 - real data');
 done_testing;
 
 fun is_descending(@report) {
-    for my $i (0 .. @report - 2) {
+    for my $i (0 .. $#report - 1) {
         my $diff = $report[$i] - $report[$i + 1];
         return 0 unless $diff >= 1 && $diff <= 3;
     }
