@@ -15,4 +15,8 @@ method clockwise() {
     return Direction->new(dx => -$self->dy, dy => $self->dx);
 }
 
+method to_string() {
+    return join ',', $self->dx, $self->dy;
+}
+
 1;

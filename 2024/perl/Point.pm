@@ -12,6 +12,10 @@ method offset($dir) {
     return Point->new(x => $self->x + $dir->dx, y => $self->y + $dir->dy);
 }
 
+method equals($point) {
+    return $self->x == $point->x && $self->y == $point->y;
+}
+
 method to_string() {
     return join ',', $self->x, $self->y;
 }
