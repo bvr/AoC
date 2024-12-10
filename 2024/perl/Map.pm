@@ -4,7 +4,7 @@ use MooX::StrictConstructor;
 use Types::Standard qw(Int Str Enum ArrayRef InstanceOf);
 use List::AllUtils qw(max);
 use Function::Parameters;
-use Data::Dump qw(dd);
+use Data::Dump qw(dd pp);
 
 use Point;
 use Direction;
@@ -32,7 +32,10 @@ method number_cycles() {
     my $progress = 0;
     for my $obstacle_pos (values %$steps) {
         warn $progress++." / ".(scalar values %$steps)." cycles = $cycles\n";
-        $cycles++ if $self->is_walk_cycle($obstacle_pos);
+        if($self->is_walk_cycle($obstacle_pos)) {
+            $cycles++;
+            warn pp($obstacle_pos);
+        }
     }
     return $cycles;
 }
@@ -49,7 +52,7 @@ method is_walk_cycle($obstacle) {
         return 1 if defined $already_there{ $state };
         $already_there{ $state } = 1;
 
-        $dir = $dir->clockwise() if $self->at($pos->offset($dir)) eq '#' || $pos->offset($dir)->equals($obstacle);
+        $dir = $dir->clockwise() while $self->at($pos->offset($dir)) eq '#' || $pos->offset($dir)->equals($obstacle);
         $pos = $pos->offset($dir);
         return if $self->at($pos) eq '';
     }
@@ -66,7 +69,7 @@ method guard_walk() {
     my %unique_pos = ();
     while(1) {
         $unique_pos{ $pos->to_string() } = $pos;
-        $dir = $dir->clockwise() if $self->at($pos->offset($dir)) eq '#';
+        $dir = $dir->clockwise() while $self->at($pos->offset($dir)) eq '#';
         $pos = $pos->offset($dir);
         last if $self->at($pos) eq '';
     }

@@ -4,7 +4,6 @@
 use Test2::V0;
 use Path::Class qw(file);
 use Function::Parameters;
-use List::AllUtils qw(sum natatime first);
 
 use Map;
 
@@ -28,6 +27,6 @@ is(Map->from_string($test_map)->number_steps(), 41,   'part 1 - test');
 is(Map->from_string($map)->number_steps(),      5199, 'part 1 - real');
 
 is(Map->from_string($test_map)->number_cycles(), 6,   'part 2 - test');
-is(Map->from_string($map)->number_cycles(),      5199, 'part 2 - real');
+is(Map->from_string($map)->number_cycles(),      1915, 'part 2 - real');
 
 done_testing;
