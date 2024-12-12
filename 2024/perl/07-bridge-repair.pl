@@ -37,9 +37,9 @@ fun calibration_result($line, $use_concat) {
 fun can_be_solved($use_concat, $result, @items) {
 
     # basic cases
-    return if @items == 0;                              # nothing to do
-    return $result == $items[0] if @items == 1;         # single item, just compare with result
-    return if $result < $items[0];                      # we are already over
+    return 0                    if @items == 0;            # nothing to do
+    return $result == $items[0] if @items == 1;            # single item, just compare with result
+    return 0                    if $result < $items[0];    # we are already over
 
     # collapse first two items and recurse
     return   can_be_solved($use_concat, $result, $items[0]+$items[1], @items[2..$#items]) 
