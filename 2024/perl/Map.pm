@@ -4,6 +4,7 @@ use MooX::StrictConstructor;
 use Types::Standard qw(Int Str Enum ArrayRef InstanceOf);
 use List::AllUtils qw(max);
 use Function::Parameters;
+use Iterator::Simple qw(iterator);
 use Data::Dump qw(dd pp);
 
 use Point;
@@ -40,6 +41,36 @@ method number_cycles() {
     return $cycles;
 }
 
+method number_cycles_iterator() {
+    my $cycles = 0;
+    my $it = $self->walk_iterator($self->start, Direction->up(), fun($pos) { $self->at($pos) eq '#' });
+
+    my $step = 0;
+
+    my %already_there = ();
+    while(my ($pos, $dir) = $it->next) {
+        warn $step++ . " - cycles=" . $cycles . "\n";
+        my $obstacle = $pos->offset($dir);
+        if($self->is_walk_cycle2($pos, $dir, $obstacle, { %already_there })) {
+            $cycles++;
+        }
+
+        my $state = $pos->to_string() . '-' . $dir->to_string();
+        $already_there{ $state } = 1;
+    }
+    return $cycles;
+}
+
+method is_walk_cycle2($pos, $dir, $obstacle, $already_there) {
+    my $finish_walk = $self->walk_iterator($pos, $dir, fun($pos) { $self->at($pos) eq '#' || $pos->equals($obstacle) });
+    while(my ($pos, $dir) = $finish_walk->next) {
+        my $state = $pos->to_string() . '-' . $dir->to_string();
+        return 1 if defined $already_there->{ $state };
+        $already_there->{ $state } = 1;
+    }
+    return 0;
+}
+
 method is_walk_cycle($obstacle) {
     my $pos = $self->start;
     my $dir = Direction->up();
@@ -58,22 +89,25 @@ method is_walk_cycle($obstacle) {
     }
 }
 
-method number_steps() {
-    return scalar keys(%{ $self->guard_walk() });
+method number_steps_iterator() {
+    my $it = $self->walk_iterator($self->start, Direction->up(), fun($pos) { $self->at($pos) eq '#' });
+    my %unique_pos = ();
+    while(my ($pos) = $it->next) {
+        $unique_pos{ $pos->to_string() } = 1;
+    }
+    return scalar keys %unique_pos;
 }
 
-method guard_walk() {
-    my $pos = $self->start;
-    my $dir = Direction->up();
+method walk_iterator($pos, $dir, $blocked) {
+    return iterator {
+        return if $self->at($pos) eq '';
+        my $prev_pos = $pos;
+        my $prev_dir = $dir;
 
-    my %unique_pos = ();
-    while(1) {
-        $unique_pos{ $pos->to_string() } = $pos;
-        $dir = $dir->clockwise() while $self->at($pos->offset($dir)) eq '#';
+        $dir = $dir->clockwise() while $blocked->($pos->offset($dir));
         $pos = $pos->offset($dir);
-        last if $self->at($pos) eq '';
-    }
-    return \%unique_pos;
+        return ($prev_pos, $prev_dir);
+    };
 }
 
 method at($pos) {
