@@ -2,6 +2,7 @@ package Point;
 use Moo;
 use Types::Standard qw(Int);
 use Function::Parameters;
+use namespace::clean;
 
 use Direction;
 
@@ -9,11 +10,22 @@ has x => (is => 'ro', isa => Int);
 has y => (is => 'ro', isa => Int);
 
 method offset($dir) {
-    return Point->new(x => $self->x + $dir->dx, y => $self->y + $dir->dy);
+    return Point->new(
+        x => $self->x + $dir->dx, 
+        y => $self->y + $dir->dy
+    );
 }
 
 method equals($point) {
-    return $self->x == $point->x && $self->y == $point->y;
+    return $self->x == $point->x 
+        && $self->y == $point->y;
+}
+
+method dir_to($point) {
+    return Direction->new(
+        dx => $point->x - $self->x, 
+        dy => $point->y - $self->y
+    );
 }
 
 method to_string() {

@@ -5,7 +5,7 @@ use Test2::V0;
 use Path::Class qw(file);
 use Function::Parameters;
 use List::AllUtils qw(sum natatime first);
-use Data::Dump qw(dd);
+use Data::Printer;
 
 use Grid;
 
@@ -27,7 +27,8 @@ my $test_grid = Grid->from_string([qw(
     ............
 )]);
 
-dd $test_grid;
+is $test_grid->unique_antinodes(), 14,  'part 1 - test';
+is $grid->unique_antinodes(),      344, 'part 1 - real';
 
 done_testing;
 

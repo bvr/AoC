@@ -2,6 +2,8 @@ package Grid;
 use Moo;
 use Types::Standard qw(Int Str HashRef ArrayRef InstanceOf);
 use Function::Parameters;
+use Algorithm::Combinatorics qw(combinations);
+use namespace::clean;
 
 use Point;
 
@@ -24,6 +26,20 @@ fun _find_frequencies_in($area) {
         }
     }
     return \%freq;
+}
+
+method unique_antinodes() {
+    my %unique = ();
+    for my $f (sort keys %{ $self->freq }) {
+        for my $pair (combinations($self->freq->{$f}, 2)) {
+            my $dir = $pair->[0]->dir_to($pair->[1]);           # vector between points
+            my $a1 = $pair->[1]->offset($dir);                  # antinode in direction
+            my $a2 = $pair->[0]->offset($dir->opposite());      # antinode in opposite
+            $unique{ $a1->to_string() } = $a1;
+            $unique{ $a2->to_string() } = $a2;
+        }
+    }
+    return () = grep { $self->at($_) } values %unique;
 }
 
 method at($pos) {

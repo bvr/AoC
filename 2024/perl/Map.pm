@@ -6,6 +6,7 @@ use List::AllUtils qw(max);
 use Function::Parameters;
 use Iterator::Simple qw(iterator);
 use Data::Dump qw(dd pp);
+use namespace::clean;
 
 use Point;
 use Direction;
