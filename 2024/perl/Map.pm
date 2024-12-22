@@ -1,12 +1,12 @@
 package Map;
 use Moo;
-use MooX::StrictConstructor;
 use Types::Standard qw(Int Str Enum ArrayRef InstanceOf);
 use List::AllUtils qw(max);
 use Function::Parameters;
 use Iterator::Simple qw(iterator);
 use Data::Dump qw(dd pp);
 use namespace::clean;
+use MooX::StrictConstructor;            # needs to go after namespace::clean (https://metacpan.org/pod/MooX::StrictConstructor#Interactions-with-namespace::clean)
 
 use Point;
 use Direction;
