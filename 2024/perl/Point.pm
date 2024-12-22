@@ -3,11 +3,12 @@ use Moo;
 use Types::Standard qw(Int);
 use Function::Parameters;
 use namespace::clean;
+use MooX::StrictConstructor;
 
 use Direction;
 
-has x => (is => 'ro', isa => Int);
-has y => (is => 'ro', isa => Int);
+has x => (is => 'ro', isa => Int, required => 1);
+has y => (is => 'ro', isa => Int, required => 1);
 
 method offset($dir) {
     return Point->new(

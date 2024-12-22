@@ -3,9 +3,10 @@ use Moo;
 use Types::Standard qw(Int);
 use Function::Parameters;
 use namespace::clean;
+use MooX::StrictConstructor;
 
-has dx => (is => 'ro');
-has dy => (is => 'ro');
+has dx => (is => 'ro', required => 1);
+has dy => (is => 'ro', required => 1);
 
 method up($class:) {
     return Direction->new(dx => 0, dy => -1);

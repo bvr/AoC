@@ -27,8 +27,10 @@ my $test_grid = Grid->from_string([qw(
     ............
 )]);
 
-is $test_grid->unique_antinodes(), 14,  'part 1 - test';
-is $grid->unique_antinodes(),      344, 'part 1 - real';
+is $test_grid->unique_antinodes(),  14,   'part 1 - test';
+is $grid->unique_antinodes(),       344,  'part 1 - real';
+is $test_grid->unique_antinodes(1), 34,   'part 2 - test';
+is $grid->unique_antinodes(1),      1182, 'part 2 - real';
 
 done_testing;
 
